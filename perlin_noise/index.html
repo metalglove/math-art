@@ -1,0 +1,161 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script type="text/javascript">
+      const width = 800;
+      const height = 600;
+
+      var canvas;
+      var ctx;
+
+      const max = 800;
+      const perlin_noise_values = new Array(max).fill(0.0);
+      const original_amplification = 1.2;
+      const original_frequency = 0.008;
+      const octaves = 8;
+      const animation_speed = 5;
+
+      var noise;
+      var animation_index = 0;
+
+      function init() {
+        canvas = document.getElementById("main-canvas");
+        ctx = canvas.getContext("2d");
+        noise = new Noise1D();
+        window.requestAnimationFrame(draw);
+      }
+
+      function perlin_noise_circle() {
+        const TWO_PI = Math.PI * 2;
+        const scale = 50;
+        const radius = 100;
+        const half_width = width / 2;
+        const half_height = height / 2;
+        const height_padding = 100;
+
+        ctx.beginPath();
+        for (let angle = 0; angle < TWO_PI; angle += TWO_PI / max) {
+          let noise_value_x = 0;
+          let noise_value_y = 0;
+          let amplification = original_amplification * scale;
+          let frequency = original_frequency;
+
+          // get original angle values for the circle
+          let x = Math.cos(angle) * (radius) + half_width;
+          let y = Math.sin(angle) * (radius) + half_height + height_padding;
+
+          for (let octave = 0; octave < octaves; octave++) {
+            // pass them through the noise function
+            noise_value_x += amplification * noise.noise((x + animation_index) * frequency);
+            noise_value_y += amplification * noise.noise((y + animation_index) * frequency);
+            amplification *= original_amplification;
+            frequency *= original_frequency;
+          }
+          
+          // add them to the radius of the circle
+          x = Math.cos(angle) * (radius + noise_value_x) + half_width;
+          y = Math.sin(angle) * (radius + noise_value_y) + half_height + height_padding;
+
+          if (angle == 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      function perlin_noise_graph() {
+        const scale = 100;
+
+        ctx.beginPath();
+        for (let x = 0; x < max; x++) {
+          let noise_value = 0;
+          let amplification = original_amplification;
+          let frequency = original_frequency;
+          for (let octave = 0; octave < octaves; octave++) {
+            noise_value += amplification * noise.noise((x + animation_index) * frequency);
+            amplification *= original_amplification;
+            frequency *= original_frequency;
+          }
+          const y = noise_value * scale + (scale * 2);
+          if (x == 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+
+      function draw() {
+        // clears canvas
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        // draw the perlin noise graph and circle
+        perlin_noise_graph();
+        perlin_noise_circle();
+
+        animation_index += animation_speed;
+
+        // redraw the perlin noise in the next draw animation frame
+        window.requestAnimationFrame(draw);
+      }
+
+      class Noise1D {
+        permutation;
+        max_permutation;
+
+        constructor() {
+          const size = 256;
+          this.max_permutation = size - 1;
+          this.permutation = Array.from(Array(size).keys());
+          this.shuffle(this.permutation);
+        }
+
+        gradient(h, x) {
+          return (h & 1) == 0 ? x : -x;
+        }
+
+        lerp(lo, hi, t) {
+          return lo + t * (hi - lo);
+        }
+
+        fade(x) {
+          return x * x * x * (x * (x * 6 - 15) + 10);
+        }
+
+        noise(x) {
+          let permutation_index = Math.floor(x) & this.max_permutation;
+          let a = this.permutation[permutation_index];
+          let b = this.permutation[permutation_index + 1];
+          let floored_x = x - Math.floor(x);
+          let u = this.fade(floored_x);
+          let lo = this.gradient(a, floored_x);
+          let hi = this.gradient(b, floored_x - 1.0);
+          return this.lerp(lo, hi, u);
+        }
+
+        shuffle(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        }
+      }
+    </script>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+  </head>
+  <body onload="init();">
+    <canvas id="main-canvas" width="800" height="600"></canvas>
+  </body>
+</html>
