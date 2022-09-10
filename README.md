@@ -9,6 +9,9 @@ This fractal was generated using `k = -4` and `n = 100`.
 ![fractal.jpg](fractal_spirograph/fractal.jpg)
 Inspiration from: http://benice-equation.blogspot.com/2012/01/fractal-spirograph.html
 
+![animation.gif](fractal_spirograph/animation.gif)
+Inspiration from: http://benice-equation.blogspot.com/2012/01/fractal-spirograph.html
+
 ## 2. Perlin noise
 An animated one dimensional perlin noise graph and circle.
 
